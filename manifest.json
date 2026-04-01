@@ -1,0 +1,12 @@
+{
+  "display_name": "最终提示词查看器",
+  "loading_order": 999,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "custom",
+  "version": "1.0.0",
+  "homePage": "",
+  "auto_update": false
+}
