@@ -3,6 +3,12 @@
  * 通过拦截 fetch 捕获发往 AI 的最终 messages（含所有 EJS/worldbook 处理结果）。
  * 保留历史记录列表，方便区分"主对话"与"后台脚本"请求。
  */
+// 在脚本同步执行阶段捕获自身路径（document.currentScript 只在此阶段有效）
+const _fpvExtPath = (() => {
+    const src = document.currentScript?.src || '';
+    return src ? src.substring(0, src.lastIndexOf('/')) : '/scripts/extensions/third-party/final-prompt-viewer';
+})();
+
 (function () {
     'use strict';
 
@@ -369,7 +375,7 @@
         const container = document.getElementById('extensions_settings') || document.getElementById('extensions_settings2');
         if (!container) return;
         try {
-            const res = await fetch('/scripts/extensions/third-party/final-prompt-viewer/settings.html');
+            const res = await fetch(`${_fpvExtPath}/settings.html`);
             if (!res.ok) return;
             const wrapper = document.createElement('div');
             wrapper.innerHTML = await res.text();
