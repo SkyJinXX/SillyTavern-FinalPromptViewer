@@ -45,11 +45,14 @@ const _fpvExtPath = (() => {
 
     eventSource.on(event_types.CHAT_COMPLETION_SETTINGS_READY, (generateData) => {
         try {
+            console.log('[FPV] CHAT_COMPLETION_SETTINGS_READY fired, keys:', Object.keys(generateData || {}), 'messages?', Array.isArray(generateData?.messages), 'count:', generateData?.messages?.length);
             const messages = generateData?.messages;
             if (Array.isArray(messages) && messages.length >= 1) {
                 addCapture(messages);
             }
-        } catch (_) {}
+        } catch (e) {
+            console.log('[FPV] error in listener:', e);
+        }
     });
 
     function addCapture(messages) {
