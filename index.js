@@ -39,19 +39,71 @@ const _fpvExtPath = (() => {
     );
     function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
 
-    // ─── 事件监听（替代 fetch 拦截）─────────────────────────────────────────────
-    // CHAT_COMPLETION_SETTINGS_READY 在每次 generate 请求发送前于主窗口 eventSource 触发，
-    // 无论请求来自主窗口还是 JS-Slash-Runner iframe，都会命中。
-
+    // ─── 捕获策略一：ST 事件监听（覆盖主窗口及走 generateRaw 路径的 iframe 请求）───
     eventSource.on(event_types.CHAT_COMPLETION_SETTINGS_READY, (generateData) => {
         try {
-            console.log('[FPV] CHAT_COMPLETION_SETTINGS_READY fired, keys:', Object.keys(generateData || {}), 'messages?', Array.isArray(generateData?.messages), 'count:', generateData?.messages?.length);
             const messages = generateData?.messages;
             if (Array.isArray(messages) && messages.length >= 1) {
                 addCapture(messages);
             }
-        } catch (e) {
-            console.log('[FPV] error in listener:', e);
+        } catch (_) {}
+    });
+
+    // ─── 捕获策略二：iframe fetch 补丁（覆盖直接 fetch ST 后端的 iframe 脚本）──────
+    // 数据库插件等走"独立API配置"路径时会在 iframe 内直接 fetch /api/backends/chat-completions/generate，
+    // 不经过 ST 事件系统。通过给 iframe 打 fetch 补丁并 postMessage 到主窗口来捕获。
+
+    const _fpvPatchedKey = '__fpv_fetched';
+
+    function patchIframeFetch(iframe) {
+        try {
+            const iwin = iframe.contentWindow;
+            if (!iwin || iwin[_fpvPatchedKey]) return;
+            iwin[_fpvPatchedKey] = true;
+            const origFetch = iwin.fetch.bind(iwin);
+            iwin.fetch = async function (url, options = {}) {
+                const urlStr = typeof url === 'string' ? url : (url?.url || String(url));
+                if (urlStr.includes('/api/backends/chat-completions/generate') && (options.method || '').toUpperCase() === 'POST') {
+                    try {
+                        const bodyText = typeof options.body === 'string' ? options.body : await new iwin.Response(options.body).text();
+                        const data = JSON.parse(bodyText);
+                        if (Array.isArray(data?.messages) && data.messages.length >= 1) {
+                            window.postMessage({ _fpv: true, messages: data.messages }, '*');
+                        }
+                    } catch (_) {}
+                }
+                return origFetch(url, options);
+            };
+        } catch (_) {}
+    }
+
+    function observeAndPatchIframes() {
+        // 补丁已存在的 iframe
+        document.querySelectorAll('iframe').forEach(iframe => {
+            if (iframe.contentDocument?.readyState === 'complete') {
+                patchIframeFetch(iframe);
+            } else {
+                iframe.addEventListener('load', () => patchIframeFetch(iframe), { once: true });
+            }
+        });
+        // 监听新 iframe 的创建
+        new MutationObserver(mutations => {
+            for (const m of mutations) {
+                for (const node of m.addedNodes) {
+                    if (node.nodeType !== 1) continue;
+                    const iframes = node.tagName === 'IFRAME' ? [node] : [...node.querySelectorAll('iframe')];
+                    iframes.forEach(iframe => {
+                        iframe.addEventListener('load', () => patchIframeFetch(iframe), { once: true });
+                    });
+                }
+            }
+        }).observe(document.documentElement, { childList: true, subtree: true });
+    }
+
+    // 主窗口接收来自 iframe 的捕获数据
+    window.addEventListener('message', e => {
+        if (e.data?._fpv && Array.isArray(e.data.messages) && e.data.messages.length >= 1) {
+            addCapture(e.data.messages);
         }
     });
 
@@ -480,10 +532,11 @@ const _fpvExtPath = (() => {
         const tryAddMenu = () => document.getElementById('extensionsMenu') ? addMenuEntry() : setTimeout(tryAddMenu, 500);
         setTimeout(tryAddMenu, 300);
         injectSettingsUI();
+        observeAndPatchIframes();
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', buildUI);
     else buildUI();
 
-    console.log('[最终提示词查看器] 已加载，fetch 拦截器已激活 ✓');
+    console.log('[最终提示词查看器] 已加载 ✓');
 })();
