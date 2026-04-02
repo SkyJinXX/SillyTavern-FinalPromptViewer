@@ -140,30 +140,6 @@
     border-color: #f87171 !important;
 }
 
-/* ── 新数据提示横条 ───────────────────────────────────────────── */
-#fpv-new-hint {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    padding: 7px 16px;
-    background: linear-gradient(90deg, #1c1f3a, #1e2442);
-    border-bottom: 1px solid #3730a3;
-    color: #a5b4fc;
-    font-size: 12px;
-    flex-shrink: 0;
-}
-#fpv-new-hint span { flex: 1; }
-#fpv-new-hint button {
-    padding: 3px 10px;
-    border-radius: 5px;
-    border: 1px solid #4338ca;
-    background: #312e81;
-    color: #c7d2fe;
-    font-size: 11px;
-    cursor: pointer;
-    transition: background 0.12s;
-}
-#fpv-new-hint button:hover { background: #3730a3; }
 
 /* ── Status bar ──────────────────────────────────────────────── */
 #fpv-statusbar {
@@ -287,6 +263,92 @@
     width: 14px;
     text-align: center;
 }
+
+/* ── 历史记录栏 ──────────────────────────────────────────────── */
+#fpv-history-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    background: #0a0d16;
+    border-bottom: 1px solid #1f2937;
+    flex-shrink: 0;
+    overflow-x: auto;
+    min-height: 36px;
+}
+#fpv-history-bar::-webkit-scrollbar { height: 3px; }
+#fpv-history-bar::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+
+.fpv-history-empty {
+    color: #4b5563;
+    font-size: 11px;
+    font-style: italic;
+}
+
+.fpv-hist-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #2d3748;
+    background: #1f2937;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.12s, border-color 0.12s;
+    font-size: 11px;
+}
+.fpv-hist-item:hover { background: #263044; border-color: #4b5563; }
+.fpv-hist-item.fpv-hist-selected {
+    background: #1e2542;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 1px rgba(99,102,241,0.3);
+}
+
+.fpv-hist-num {
+    color: #6b7280;
+    font-weight: 700;
+    font-size: 10px;
+}
+.fpv-hist-selected .fpv-hist-num { color: #818cf8; }
+
+.fpv-hist-meta {
+    color: #e5e7eb;
+    font-weight: 600;
+}
+.fpv-hist-selected .fpv-hist-meta { color: #c7d2fe; }
+
+.fpv-hist-tokens {
+    color: #4b5563;
+    font-size: 10px;
+}
+.fpv-hist-selected .fpv-hist-tokens { color: #818cf8; }
+
+.fpv-hist-new-dot {
+    position: absolute;
+    top: 3px; right: 3px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #f87171;
+    animation: fpv-pulse 1.5s infinite;
+}
+
+/* ── 清空按钮（历史栏内联）──────────────────────────────────── */
+.fpv-clear-btn-inline {
+    margin-left: auto;
+    flex-shrink: 0;
+    padding: 3px 8px;
+    border-radius: 5px;
+    border: 1px solid #374151;
+    background: transparent;
+    color: #6b7280;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.fpv-clear-btn-inline:hover { background: rgba(248,113,113,0.15); border-color: #f87171; color: #fca5a5; }
 
 /* ── 导航条（搜索时显示）────────────────────────────────────── */
 .fpv-msg-nav {
