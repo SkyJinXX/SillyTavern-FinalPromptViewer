@@ -41,6 +41,10 @@ const _fpvExtPath = (() => {
 
     const _origFetch = window.fetch;
     window.fetch = async function (url, options) {
+        // 诊断日志：打印所有 POST 请求（临时）
+        if (typeof url === 'string' && options?.method === 'POST') {
+            console.log('[FPV] POST intercept:', url);
+        }
         if (
             typeof url === 'string' &&
             url.includes('chat-completions/generate') &&
@@ -48,10 +52,13 @@ const _fpvExtPath = (() => {
         ) {
             try {
                 const body = JSON.parse(options.body);
-                if (Array.isArray(body?.messages) && body.messages.length >= 2) {
+                console.log('[FPV] generate hit, messages.length =', body?.messages?.length, 'url =', url);
+                if (Array.isArray(body?.messages) && body.messages.length >= 1) {
                     addCapture(body.messages);
                 }
-            } catch (_) {}
+            } catch (e) {
+                console.log('[FPV] parse error:', e);
+            }
         }
         return _origFetch.apply(this, arguments);
     };
