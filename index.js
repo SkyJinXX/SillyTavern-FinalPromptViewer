@@ -3,8 +3,13 @@
  * 通过拦截 fetch 捕获发往 AI 的最终 messages（含所有 EJS/worldbook 处理结果）。
  * 保留历史记录列表，方便区分"主对话"与"后台脚本"请求。
  */
-// 在脚本同步执行阶段捕获自身路径（document.currentScript 只在此阶段有效）
+// ST 以 type="module" 加载扩展，用 import.meta.url 获取当前模块路径
 const _fpvExtPath = (() => {
+    try {
+        const url = import.meta.url;
+        if (url) return url.substring(0, url.lastIndexOf('/'));
+    } catch (_) {}
+    // 非 module 环境的兜底（本地调试用）
     const src = document.currentScript?.src || '';
     return src ? src.substring(0, src.lastIndexOf('/')) : '/scripts/extensions/third-party/final-prompt-viewer';
 })();
