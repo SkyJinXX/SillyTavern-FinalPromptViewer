@@ -4,7 +4,7 @@
  * 该事件在每次 generate 请求发送前于主窗口 eventSource 上触发，
  * 可覆盖主窗口和 iframe（JS-Slash-Runner 脚本）发起的所有请求。
  */
-import { eventSource, event_types } from '/scripts/script.js';
+import { eventSource, event_types } from '/script.js';
 // ST 以 type="module" 加载扩展，用 import.meta.url 获取当前模块路径
 const _fpvExtPath = (() => {
     try {
