@@ -1,8 +1,10 @@
 /**
  * 最终提示词查看器
- * 通过拦截 fetch 捕获发往 AI 的最终 messages（含所有 EJS/worldbook 处理结果）。
- * 保留历史记录列表，方便区分"主对话"与"后台脚本"请求。
+ * 通过监听 ST 的 CHAT_COMPLETION_SETTINGS_READY 事件捕获最终 messages。
+ * 该事件在每次 generate 请求发送前于主窗口 eventSource 上触发，
+ * 可覆盖主窗口和 iframe（JS-Slash-Runner 脚本）发起的所有请求。
  */
+import { eventSource, event_types } from '../../../script.js';
 // ST 以 type="module" 加载扩展，用 import.meta.url 获取当前模块路径
 const _fpvExtPath = (() => {
     try {
@@ -37,31 +39,18 @@ const _fpvExtPath = (() => {
     );
     function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
 
-    // ─── Fetch 拦截器 ───────────────────────────────────────────────────────────
+    // ─── 事件监听（替代 fetch 拦截）─────────────────────────────────────────────
+    // CHAT_COMPLETION_SETTINGS_READY 在每次 generate 请求发送前于主窗口 eventSource 触发，
+    // 无论请求来自主窗口还是 JS-Slash-Runner iframe，都会命中。
 
-    const _origFetch = window.fetch;
-    window.fetch = async function (url, options) {
-        // 诊断日志：打印所有 POST 请求（临时）
-        if (typeof url === 'string' && options?.method === 'POST') {
-            console.log('[FPV] POST intercept:', url);
-        }
-        if (
-            typeof url === 'string' &&
-            url.includes('chat-completions/generate') &&
-            options?.method === 'POST'
-        ) {
-            try {
-                const body = JSON.parse(options.body);
-                console.log('[FPV] generate hit, messages.length =', body?.messages?.length, 'url =', url);
-                if (Array.isArray(body?.messages) && body.messages.length >= 1) {
-                    addCapture(body.messages);
-                }
-            } catch (e) {
-                console.log('[FPV] parse error:', e);
+    eventSource.on(event_types.CHAT_COMPLETION_SETTINGS_READY, (generateData) => {
+        try {
+            const messages = generateData?.messages;
+            if (Array.isArray(messages) && messages.length >= 1) {
+                addCapture(messages);
             }
-        }
-        return _origFetch.apply(this, arguments);
-    };
+        } catch (_) {}
+    });
 
     function addCapture(messages) {
         const totalTokens = messages.reduce((sum, m) => sum + estimateTokens(rawText(m.content)), 0);
