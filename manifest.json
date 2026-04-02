@@ -5,8 +5,8 @@
   "optional": [],
   "js": "index.js",
   "css": "style.css",
-  "author": "custom",
-  "version": "1.0.0",
-  "homePage": "",
-  "auto_update": false
+  "author": "SkyJinXX",
+  "version": "1.1.0",
+  "homePage": "https://github.com/SkyJinXX/SillyTavern-FinalPromptViewer",
+  "auto_update": true
 }
