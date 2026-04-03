@@ -205,8 +205,7 @@ const _fpvExtPath = (() => {
             </div>`;
         });
 
-        bar.innerHTML = items.join('') +
-            `<button class="fpv-clear-btn-inline" onclick="window._fpvClearHistory()" title="清空历史记录">🗑</button>`;
+        bar.innerHTML = items.join('');
     }
 
     window._fpvSelectCapture = function (i) {
@@ -280,6 +279,39 @@ const _fpvExtPath = (() => {
         });
     }
 
+    window._fpvCopyMsg = function (idx) {
+        const capture = captureHistory[selectedIdx];
+        if (!capture) return;
+        const msg = capture.messages[idx];
+        if (!msg) return;
+        const text = rawText(msg.content);
+        const btn = document.getElementById(`fpv-copy-${idx}`);
+        const confirm = () => {
+            if (!btn) return;
+            btn.textContent = '✓';
+            btn.classList.add('fpv-copied');
+            setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('fpv-copied'); }, 1500);
+        };
+        if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(text).then(confirm).catch(() => fallbackCopy(text, confirm));
+        } else {
+            fallbackCopy(text, confirm);
+        }
+    };
+
+    function fallbackCopy(text, cb) {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            cb();
+        } catch (_) {}
+    }
+
     window._fpvNavMatch = function (idx, dir) {
         const body = document.getElementById(`fpv-body-${idx}`);
         if (!body) return;
@@ -335,6 +367,7 @@ const _fpvExtPath = (() => {
     <span class="fpv-badge-role fpv-badge-${escHtml(role)}">${escHtml(role)}</span>
     <span class="fpv-preview">${escHtml(preview)}</span>
     <span class="fpv-token-count">~${tokens.toLocaleString()} tokens</span>
+    <button class="fpv-copy-btn" id="fpv-copy-${idx}" onclick="window._fpvCopyMsg(${idx});event.stopPropagation()" title="复制消息内容">复制</button>
     <span class="fpv-chevron" id="fpv-chev-${idx}">▶</span>
   </div>
   ${navBar}
@@ -479,6 +512,7 @@ const _fpvExtPath = (() => {
     <span id="fpv-match-count"></span>
     <button onclick="window._fpvExpandAll()">展开全部</button>
     <button onclick="window._fpvCollapseAll()">折叠全部</button>
+    <button onclick="window._fpvClearHistory()" title="清空历史记录">清空历史</button>
     <button id="fpv-close-btn" onclick="window._fpvClose()">✕</button>
   </div>
 </div>

@@ -265,6 +265,28 @@
     text-align: center;
 }
 
+.fpv-copy-btn {
+    flex-shrink: 0;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid #374151;
+    background: transparent;
+    color: #6b7280;
+    font-size: 11px;
+    cursor: pointer;
+    line-height: 1.4;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.fpv-copy-btn:hover {
+    background: #374151;
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+.fpv-copy-btn.fpv-copied {
+    color: #34d399;
+    border-color: #34d399;
+}
+
 /* ── 历史记录栏 ──────────────────────────────────────────────── */
 #fpv-history-bar {
     display: flex;
@@ -336,20 +358,6 @@
     animation: fpv-pulse 1.5s infinite;
 }
 
-/* ── 清空按钮（历史栏内联）──────────────────────────────────── */
-.fpv-clear-btn-inline {
-    margin-left: auto;
-    flex-shrink: 0;
-    padding: 3px 8px;
-    border-radius: 5px;
-    border: 1px solid #374151;
-    background: transparent;
-    color: #6b7280;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.12s, border-color 0.12s, color 0.12s;
-}
-.fpv-clear-btn-inline:hover { background: rgba(248,113,113,0.15); border-color: #f87171; color: #fca5a5; }
 
 /* ── 导航条（搜索时显示）────────────────────────────────────── */
 .fpv-msg-nav {
