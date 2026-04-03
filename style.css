@@ -188,6 +188,7 @@
     border: 1px solid transparent;
     border-left: 3px solid #374151;
     overflow: hidden;
+    flex-shrink: 0;
     transition: border-color 0.12s;
 }
 .fpv-msg:hover { border-color: rgba(255,255,255,0.06); }
@@ -413,6 +414,7 @@
     background: rgba(0,0,0,0.35);
     border-radius: 0 0 8px 0;
     overflow: visible;
+    pointer-events: none;
 }
 .fpv-map-tick {
     position: absolute;
@@ -423,6 +425,7 @@
     border-radius: 2px;
     opacity: 0.55;
     cursor: pointer;
+    pointer-events: auto;
     transition: opacity 0.15s, background 0.15s, height 0.1s;
 }
 .fpv-map-tick:hover { opacity: 1; transform: scaleX(1.5); }
