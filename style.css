@@ -16,6 +16,7 @@
     box-shadow: 0 4px 16px rgba(0,0,0,0.6);
     transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
     user-select: none;
+    touch-action: none;
     font-size: 20px;
 }
 #fpv-btn:hover {

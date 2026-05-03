@@ -540,7 +540,6 @@ const _fpvExtPath = (() => {
         btn.id = 'fpv-btn';
         btn.title = '最终提示词查看器';
         btn.innerHTML = `<span>📋</span><span id="fpv-badge"></span>`;
-        btn.addEventListener('click', openPanel);
         if (settings.btnX !== null && settings.btnY !== null) {
             btn.style.right = 'auto'; btn.style.bottom = 'auto';
             btn.style.left = settings.btnX + 'px'; btn.style.top = settings.btnY + 'px';
@@ -605,29 +604,52 @@ const _fpvExtPath = (() => {
         });
         document.addEventListener('mouseup', () => (panelDragging = false));
 
-        // 浮动按钮拖拽
-        let btnMouseDown = false, btnDragging = false, box = 0, boy = 0;
-        btn.addEventListener('mousedown', e => { btnMouseDown = true; btnDragging = false; box = e.clientX; boy = e.clientY; e.preventDefault(); });
-        document.addEventListener('mousemove', e => {
-            if (!btnMouseDown) return;
-            if (Math.abs(e.clientX - box) < 4 && Math.abs(e.clientY - boy) < 4) return;
+        // 浮动按钮拖拽：Pointer Events 同时覆盖鼠标、触控笔和移动端手指。
+        let btnPointerId = null, btnDragging = false, btnStartX = 0, btnStartY = 0, suppressNextBtnClick = false;
+        btn.addEventListener('pointerdown', e => {
+            if (btnPointerId !== null) return;
+            btnPointerId = e.pointerId;
+            btnDragging = false;
+            btnStartX = e.clientX;
+            btnStartY = e.clientY;
+            btn.setPointerCapture?.(e.pointerId);
+            e.preventDefault();
+        });
+        btn.addEventListener('pointermove', e => {
+            if (btnPointerId !== e.pointerId) return;
+            if (!btnDragging && Math.hypot(e.clientX - btnStartX, e.clientY - btnStartY) < 4) return;
             btnDragging = true;
             const r = btn.getBoundingClientRect();
             btn.style.left = (e.clientX - r.width / 2) + 'px';
             btn.style.top  = (e.clientY - r.height / 2) + 'px';
             btn.style.right = 'auto'; btn.style.bottom = 'auto';
             keepElementInViewport(btn, 8);
+            e.preventDefault();
         });
-        document.addEventListener('mouseup', () => {
+        const endBtnPointerDrag = e => {
+            if (btnPointerId !== e.pointerId) return;
             if (btnDragging) {
                 keepElementInViewport(btn, 8);
-                settings.btnX = parseInt(btn.style.left);
-                settings.btnY = parseInt(btn.style.top);
+                settings.btnX = parseInt(btn.style.left, 10);
+                settings.btnY = parseInt(btn.style.top, 10);
                 saveSettings();
+                suppressNextBtnClick = true;
             }
-            btnMouseDown = false; btnDragging = false;
+            btn.releasePointerCapture?.(e.pointerId);
+            btnPointerId = null;
+            btnDragging = false;
+        };
+        btn.addEventListener('pointerup', endBtnPointerDrag);
+        btn.addEventListener('pointercancel', endBtnPointerDrag);
+        btn.addEventListener('click', e => {
+            if (suppressNextBtnClick) {
+                suppressNextBtnClick = false;
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return;
+            }
+            openPanel();
         });
-        btn.addEventListener('click', e => { if (btnDragging) e.stopImmediatePropagation(); });
 
         window.addEventListener('resize', () => {
             keepElementInViewport(btn, 8);
