@@ -4,7 +4,8 @@
  * 该事件在每次 generate 请求发送前于主窗口 eventSource 上触发，
  * 可覆盖主窗口和 iframe（JS-Slash-Runner 脚本）发起的所有请求。
  */
-import { eventSource, event_types } from '/script.js';
+import { eventSource, event_types, saveSettingsDebounced } from '/script.js';
+import { extension_settings } from '/scripts/extensions.js';
 // ST 以 type="module" 加载扩展，用 import.meta.url 获取当前模块路径
 const _fpvExtPath = (() => {
     try {
@@ -32,12 +33,30 @@ const _fpvExtPath = (() => {
 
     // ─── 设置持久化 ──────────────────────────────────────────────────────────────
 
-    const SETTINGS_KEY = 'fpv_settings';
-    const settings = Object.assign(
-        { showFloatBtn: true, btnX: null, btnY: null },
-        (() => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) { return {}; } })()
-    );
-    function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+    const EXTENSION_SETTINGS_KEY = 'final_prompt_viewer';
+    const LEGACY_SETTINGS_KEY = 'fpv_settings';
+    const DEFAULT_SETTINGS = { showFloatBtn: true, btnX: null, btnY: null };
+
+    function readLegacySettings() {
+        try {
+            return JSON.parse(localStorage.getItem(LEGACY_SETTINGS_KEY) || '{}');
+        } catch (_) {
+            return {};
+        }
+    }
+
+    if (!extension_settings[EXTENSION_SETTINGS_KEY]) {
+        extension_settings[EXTENSION_SETTINGS_KEY] = {};
+    }
+
+    const settings = extension_settings[EXTENSION_SETTINGS_KEY];
+    const savedSettings = { ...settings };
+    const legacySettings = readLegacySettings();
+    Object.assign(settings, DEFAULT_SETTINGS, legacySettings, savedSettings);
+
+    function saveSettings() {
+        saveSettingsDebounced();
+    }
 
     function clamp(n, min, max) {
         return Math.min(Math.max(n, min), max);
@@ -544,9 +563,8 @@ const _fpvExtPath = (() => {
             btn.style.right = 'auto'; btn.style.bottom = 'auto';
             btn.style.left = settings.btnX + 'px'; btn.style.top = settings.btnY + 'px';
         }
-        applyFloatBtnVisibility();
         document.body.appendChild(btn);
-        requestAnimationFrame(() => keepElementInViewport(btn, 8));
+        applyFloatBtnVisibility();
 
         // 主面板
         const panel = document.createElement('div');
