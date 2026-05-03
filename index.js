@@ -357,6 +357,7 @@ const _fpvExtPath = (() => {
         const statsEl   = document.getElementById('fpv-stats');
         const matchEl   = document.getElementById('fpv-match-count');
         if (!container) return;
+        syncClearSearchButton();
 
         const capture = captureHistory[selectedIdx];
 
@@ -418,6 +419,13 @@ const _fpvExtPath = (() => {
                 : `${messages.length}/${messages.length} 条消息 · 总计 <strong>~${totalTokens.toLocaleString()} tokens</strong> <span class="fpv-approx">（估算）</span>`;
         }
         if (matchEl) matchEl.textContent = query ? `${matchCount} 条匹配` : '';
+    }
+
+    function syncClearSearchButton() {
+        const input = document.getElementById('fpv-search');
+        const clearBtn = document.getElementById('fpv-clear-search');
+        if (!input || !clearBtn) return;
+        clearBtn.classList.toggle('fpv-clear-visible', input.value.length > 0);
     }
 
     // ─── 折叠/展开 ──────────────────────────────────────────────────────────────
@@ -548,7 +556,10 @@ const _fpvExtPath = (() => {
 <div id="fpv-header">
   <span id="fpv-title">📋 最终提示词查看器</span>
   <div id="fpv-toolbar">
-    <input id="fpv-search" type="text" placeholder="搜索内容…" autocomplete="off" />
+    <div id="fpv-search-wrap">
+      <input id="fpv-search" type="text" placeholder="搜索内容…" autocomplete="off" />
+      <button id="fpv-clear-search" type="button" title="清除搜索关键词" aria-label="清除搜索关键词">×</button>
+    </div>
     <span id="fpv-match-count"></span>
     <button onclick="window._fpvExpandAll()">展开全部</button>
     <button onclick="window._fpvCollapseAll()">折叠全部</button>
@@ -566,7 +577,16 @@ const _fpvExtPath = (() => {
 
         window._fpvClose = closePanel;
 
-        document.getElementById('fpv-search').addEventListener('input', () => renderMessages());
+        const searchInput = document.getElementById('fpv-search');
+        const clearSearchBtn = document.getElementById('fpv-clear-search');
+        searchInput.addEventListener('input', () => renderMessages());
+        clearSearchBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            searchInput.value = '';
+            renderMessages();
+            searchInput.focus();
+        });
+        syncClearSearchButton();
 
         // 面板拖拽
         let panelDragging = false, pox = 0, poy = 0;

@@ -76,6 +76,7 @@
 #fpv-header {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 10px;
     padding: 10px 16px;
     background: #0f1117;
@@ -83,6 +84,7 @@
     cursor: move;
     user-select: none;
     flex-shrink: 0;
+    min-width: 0;
 }
 
 #fpv-title {
@@ -91,19 +93,31 @@
     white-space: nowrap;
     color: #a5b4fc;
     letter-spacing: 0.3px;
+    flex: 0 0 auto;
 }
 
 #fpv-toolbar {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 7px;
     flex: 1;
+    min-width: 0;
+    justify-content: flex-end;
+}
+
+#fpv-search-wrap {
+    position: relative;
+    flex: 1 1 180px;
+    min-width: 160px;
+    max-width: 340px;
 }
 
 #fpv-search {
-    flex: 1;
-    max-width: 340px;
+    width: 100%;
+    box-sizing: border-box;
     padding: 5px 11px;
+    padding-right: 34px;
     border-radius: 7px;
     border: 1px solid #374151;
     background: #1f2937;
@@ -115,6 +129,35 @@
 #fpv-search:focus { border-color: #6366f1; background: #1e2542; }
 #fpv-search::placeholder { color: #4b5563; }
 
+#fpv-toolbar #fpv-clear-search {
+    display: none;
+    position: absolute;
+    top: 50%;
+    right: 7px;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50%;
+    background: transparent !important;
+    color: #818cf8 !important;
+    font-size: 17px !important;
+    line-height: 20px;
+    text-align: center;
+    cursor: pointer;
+}
+
+#fpv-toolbar #fpv-clear-search.fpv-clear-visible {
+    display: block;
+}
+
+#fpv-toolbar #fpv-clear-search:hover {
+    background: rgba(129, 140, 248, 0.14) !important;
+    color: #c7d2fe !important;
+}
+
 #fpv-match-count {
     font-size: 11px;
     color: #818cf8;
@@ -124,6 +167,7 @@
 }
 
 #fpv-toolbar button {
+    flex: 0 0 auto;
     padding: 4px 11px;
     border-radius: 6px;
     border: 1px solid #374151;
@@ -141,14 +185,95 @@
 }
 
 #fpv-close-btn {
-    margin-left: auto;
+    width: 32px;
+    min-width: 32px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0;
     border-color: #7f1d1d !important;
     color: #f87171 !important;
     font-size: 13px !important;
+    text-align: center;
 }
 #fpv-close-btn:hover {
     background: rgba(248,113,113,0.15) !important;
     border-color: #f87171 !important;
+}
+
+@media screen and (max-width: 900px) {
+    #fpv-header {
+        position: relative;
+        align-items: flex-start;
+        padding-right: 60px;
+    }
+
+    #fpv-title {
+        min-height: 34px;
+        display: flex;
+        align-items: center;
+    }
+
+    #fpv-toolbar {
+        flex: 1 1 100%;
+        justify-content: flex-start;
+    }
+
+    #fpv-search-wrap {
+        flex: 1 1 220px;
+        max-width: none;
+    }
+
+    #fpv-close-btn {
+        position: absolute;
+        top: 10px;
+        right: 16px;
+        height: 34px;
+        z-index: 1;
+    }
+}
+
+@media screen and (max-width: 520px) {
+    #fpv-header {
+        gap: 8px;
+        padding: 8px 52px 8px 10px;
+    }
+
+    #fpv-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #fpv-toolbar {
+        gap: 6px;
+    }
+
+    #fpv-search-wrap {
+        flex-basis: 100%;
+        min-width: 0;
+    }
+
+    #fpv-match-count {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    #fpv-toolbar button {
+        flex: 1 1 calc(33.333% - 6px);
+        min-width: 0;
+        padding: 7px 6px;
+        font-size: 11px;
+    }
+
+    #fpv-close-btn {
+        top: 8px;
+        right: 10px;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        font-size: 18px !important;
+    }
 }
 
 
