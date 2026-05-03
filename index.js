@@ -39,6 +39,37 @@ const _fpvExtPath = (() => {
     );
     function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
 
+    function clamp(n, min, max) {
+        return Math.min(Math.max(n, min), max);
+    }
+
+    function viewportSize() {
+        const vv = window.visualViewport;
+        return {
+            width: Math.max(0, vv?.width || window.innerWidth || document.documentElement.clientWidth || 0),
+            height: Math.max(0, vv?.height || window.innerHeight || document.documentElement.clientHeight || 0),
+        };
+    }
+
+    function keepElementInViewport(el, padding = 8) {
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const vp = viewportSize();
+        if (!r.width || !r.height || !vp.width || !vp.height) return;
+
+        const maxLeft = Math.max(padding, vp.width - r.width - padding);
+        const maxTop = Math.max(padding, vp.height - r.height - padding);
+        const left = clamp(r.left, padding, maxLeft);
+        const top = clamp(r.top, padding, maxTop);
+
+        if (Math.abs(left - r.left) > 0.5 || Math.abs(top - r.top) > 0.5) {
+            el.style.left = left + 'px';
+            el.style.top = top + 'px';
+            el.style.right = 'auto';
+            el.style.bottom = 'auto';
+        }
+    }
+
     // ─── 捕获策略一：ST 事件监听（覆盖主窗口及走 generateRaw 路径的 iframe 请求）───
     eventSource.on(event_types.CHAT_COMPLETION_SETTINGS_READY, (generateData) => {
         try {
@@ -427,6 +458,7 @@ const _fpvExtPath = (() => {
         const panel = document.getElementById('fpv-panel');
         if (!panel) return;
         panel.style.display = 'flex';
+        keepElementInViewport(panel, 8);
         panelVisible = true;
         const badge = document.getElementById('fpv-badge');
         if (badge) badge.style.display = 'none';
@@ -454,7 +486,11 @@ const _fpvExtPath = (() => {
         item.setAttribute('role', 'listitem');
         item.title = '最终提示词查看器';
         item.innerHTML = `<div class="fa-fw fa-solid fa-clipboard extensionsMenuExtensionButton"></div><span>最终提示词查看器</span>`;
-        item.addEventListener('click', () => { document.getElementById('extensionsMenu')?.classList.remove('open'); openPanel(); });
+        item.addEventListener('click', () => {
+            const menuEl = document.getElementById('extensionsMenu');
+            if (menuEl) menuEl.style.display = 'none';
+            openPanel();
+        });
         menu.appendChild(item);
     }
 
@@ -482,7 +518,10 @@ const _fpvExtPath = (() => {
 
     function applyFloatBtnVisibility() {
         const btn = document.getElementById('fpv-btn');
-        if (btn) btn.style.display = settings.showFloatBtn ? 'flex' : 'none';
+        if (btn) {
+            btn.style.display = settings.showFloatBtn ? 'flex' : 'none';
+            if (settings.showFloatBtn) requestAnimationFrame(() => keepElementInViewport(btn, 8));
+        }
     }
 
     // ─── 构建 DOM ───────────────────────────────────────────────────────────────
@@ -500,6 +539,7 @@ const _fpvExtPath = (() => {
         }
         applyFloatBtnVisibility();
         document.body.appendChild(btn);
+        requestAnimationFrame(() => keepElementInViewport(btn, 8));
 
         // 主面板
         const panel = document.createElement('div');
@@ -541,6 +581,7 @@ const _fpvExtPath = (() => {
             panel.style.left = (e.clientX - pox) + 'px';
             panel.style.top  = (e.clientY - poy) + 'px';
             panel.style.right = 'auto'; panel.style.bottom = 'auto';
+            keepElementInViewport(panel, 8);
         });
         document.addEventListener('mouseup', () => (panelDragging = false));
 
@@ -555,12 +596,27 @@ const _fpvExtPath = (() => {
             btn.style.left = (e.clientX - r.width / 2) + 'px';
             btn.style.top  = (e.clientY - r.height / 2) + 'px';
             btn.style.right = 'auto'; btn.style.bottom = 'auto';
+            keepElementInViewport(btn, 8);
         });
         document.addEventListener('mouseup', () => {
-            if (btnDragging) { settings.btnX = parseInt(btn.style.left); settings.btnY = parseInt(btn.style.top); saveSettings(); }
+            if (btnDragging) {
+                keepElementInViewport(btn, 8);
+                settings.btnX = parseInt(btn.style.left);
+                settings.btnY = parseInt(btn.style.top);
+                saveSettings();
+            }
             btnMouseDown = false; btnDragging = false;
         });
         btn.addEventListener('click', e => { if (btnDragging) e.stopImmediatePropagation(); });
+
+        window.addEventListener('resize', () => {
+            keepElementInViewport(btn, 8);
+            if (panelVisible) keepElementInViewport(panel, 8);
+        });
+        window.visualViewport?.addEventListener('resize', () => {
+            keepElementInViewport(btn, 8);
+            if (panelVisible) keepElementInViewport(panel, 8);
+        });
 
         // 菜单 & 设置
         const tryAddMenu = () => document.getElementById('extensionsMenu') ? addMenuEntry() : setTimeout(tryAddMenu, 500);

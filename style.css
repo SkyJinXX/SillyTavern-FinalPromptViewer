@@ -44,11 +44,11 @@
 /* ── 面板 ─────────────────────────────────────────────────────── */
 #fpv-panel {
     position: fixed;
-    top: 5%;
-    left: 10%;
-    width: 80%;
-    height: 88%;
-    z-index: 9999;
+    top: max(12px, 5dvh);
+    left: max(12px, 10vw);
+    width: min(80vw, calc(100vw - 24px));
+    height: min(88dvh, calc(100dvh - 24px));
+    z-index: 30010;
     display: none;
     flex-direction: column;
     background: #111827;
@@ -59,6 +59,17 @@
     font-family: 'Consolas', 'Menlo', 'Courier New', monospace;
     font-size: 13px;
     color: #d1d5db;
+    box-sizing: border-box;
+}
+
+@media screen and (max-width: 600px) {
+    #fpv-panel {
+        top: 8px;
+        left: 8px;
+        width: calc(100vw - 16px);
+        height: calc(100dvh - 16px);
+        border-radius: 10px;
+    }
 }
 
 /* ── Header ──────────────────────────────────────────────────── */
