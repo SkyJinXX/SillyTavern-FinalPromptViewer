@@ -587,22 +587,34 @@ const _fpvExtPath = (() => {
         });
         syncClearSearchButton();
 
-        // 面板拖拽
-        let panelDragging = false, pox = 0, poy = 0;
-        document.getElementById('fpv-header').addEventListener('mousedown', e => {
+        // 面板拖拽：Pointer Events 让桌面鼠标和移动端触摸共用同一套逻辑。
+        const panelHeader = document.getElementById('fpv-header');
+        let panelPointerId = null, pox = 0, poy = 0;
+        panelHeader.addEventListener('pointerdown', e => {
             if (e.target.closest('button, input')) return;
-            panelDragging = true;
+            if (panelPointerId !== null) return;
+            panelPointerId = e.pointerId;
             const r = panel.getBoundingClientRect();
             pox = e.clientX - r.left; poy = e.clientY - r.top;
+            panelHeader.setPointerCapture?.(e.pointerId);
+            e.preventDefault();
         });
-        document.addEventListener('mousemove', e => {
-            if (!panelDragging) return;
+        panelHeader.addEventListener('pointermove', e => {
+            if (panelPointerId !== e.pointerId) return;
             panel.style.left = (e.clientX - pox) + 'px';
             panel.style.top  = (e.clientY - poy) + 'px';
             panel.style.right = 'auto'; panel.style.bottom = 'auto';
             keepElementInViewport(panel, 8);
+            e.preventDefault();
         });
-        document.addEventListener('mouseup', () => (panelDragging = false));
+        const endPanelPointerDrag = e => {
+            if (panelPointerId !== e.pointerId) return;
+            keepElementInViewport(panel, 8);
+            panelHeader.releasePointerCapture?.(e.pointerId);
+            panelPointerId = null;
+        };
+        panelHeader.addEventListener('pointerup', endPanelPointerDrag);
+        panelHeader.addEventListener('pointercancel', endPanelPointerDrag);
 
         // 浮动按钮拖拽：Pointer Events 同时覆盖鼠标、触控笔和移动端手指。
         let btnPointerId = null, btnDragging = false, btnStartX = 0, btnStartY = 0, suppressNextBtnClick = false;

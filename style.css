@@ -86,6 +86,7 @@
     user-select: none;
     flex-shrink: 0;
     min-width: 0;
+    touch-action: none;
 }
 
 #fpv-title {
